@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar entrada{% endblock %}
+{% block encabezado %}Registrar entrada{% endblock %}
+{% block contenido %}
+<div class="grid2">
+  <div class="panel">
+    <h2>Datos del vehículo</h2>
+
+    {% if consulta %}
+      {% if consulta.estado == VENCIDA %}
+      <div class="alert e"><b>No se puede registrar la entrada.</b> La mensualidad de esta placa venció el {{ consulta.mensualidad.fecha_fin | fecha }}. Pide al usuario que renueve en administración.</div>
+      {% elif consulta.estado == SIN_MENSUALIDAD %}
+      <div class="alert e"><b>No se puede registrar la entrada.</b> Esta placa no tiene una mensualidad registrada.</div>
+      {% elif consulta.ya_dentro %}
+      <div class="alert e"><b>No se puede registrar la entrada.</b> Este vehículo ya está dentro del parqueadero.</div>
+      {% elif consulta.sin_celdas %}
+      <div class="alert e"><b>No se puede registrar la entrada.</b> No quedan celdas libres para este tipo de vehículo.</div>
+      {% else %}
+      <div class="alert o">Mensualidad vigente hasta el {{ consulta.mensualidad.fecha_fin | fecha }}</div>
+      {% endif %}
+    {% endif %}
+
+    <form method="get" action="{{ url_for('movimiento.entrada') }}">
+      <div class="row">
+        <div class="fld"><label for="placa">Placa</label>
+          <input class="inp mayus" id="placa" name="placa" value="{{ placa }}" maxlength="6" placeholder="ABC123" autofocus required></div>
+        <div class="al-fin" style="padding-bottom:16px"><button class="btn p" type="submit">Buscar</button></div>
+      </div>
+    </form>
+
+    <form method="post" action="{{ url_for('movimiento.entrada') }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <input type="hidden" name="placa" value="{{ placa }}">
+      <div class="row">
+        <div class="fld"><label>Tipo de vehículo</label>
+          <div class="inp ro">{{ consulta.vehiculo.tipo.value if consulta else '—' }}</div></div>
+        <div class="fld"><label>Propietario</label>
+          <div class="inp ro">{{ consulta.vehiculo.usuario.nombre_completo if consulta else '—' }}</div></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label for="celda">Celda asignada</label>
+          {% if consulta and consulta.puede_entrar %}
+          <input class="inp" id="celda" name="celda" value="{{ consulta.celda_sugerida.codigo }}" readonly>
+          {% else %}
+          <div class="inp ro">Sin asignar</div>
+          {% endif %}
+        </div>
+        {% if consulta and not consulta.puede_entrar %}
+        <div class="fld"><label>Estado de la mensualidad</label>
+          <div class="inp ro">
+            {% if consulta.estado == VIGENTE %}<span class="badge ok">Vigente</span>
+            {% elif consulta.estado == VENCIDA %}<span class="badge bad">Vencida</span>
+            {% else %}<span class="badge warn">Sin mensualidad</span>{% endif %}
+          </div></div>
+        {% else %}
+        <div class="fld"><label>Fecha y hora de entrada</label>
+          <div class="inp ro">{{ ahora | fecha_hora }}</div></div>
+        {% endif %}
+      </div>
+      <div class="botones">
+        <button class="btn p" type="submit" {% if not (consulta and consulta.puede_entrar) %}disabled{% endif %}>Registrar entrada</button>
+        <a class="btn g" href="{{ url_for('movimiento.entrada') }}">{{ 'Limpiar' if consulta and not consulta.puede_entrar else 'Cancelar' }}</a>
+      </div>
+      {% if consulta and consulta.puede_entrar %}
+      <p class="nota">La celda sugerida es la primera libre. Si prefieres otra, haz clic en una celda verde del mapa.</p>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>Celdas de {{ tipo.value | lower }}s</h2>
+    <div class="cells" id="mapa-celdas">
+      {% for c in celdas %}
+        {% set sel = consulta and consulta.puede_entrar and consulta.celda_sugerida.codigo == c.codigo %}
+        {% if c.estado.name == 'LIBRE' %}
+          {% if consulta and consulta.puede_entrar %}
+          <button type="button" class="cell {{ 's' if sel else 'f' }}" data-codigo="{{ c.codigo }}">{{ c.codigo }}</button>
+          {% else %}
+          <div class="cell f">{{ c.codigo }}</div>
+          {% endif %}
+        {% elif c.estado.name == 'OCUPADA' %}<div class="cell o">{{ c.codigo }}</div>
+        {% else %}<div class="cell m" title="En mantenimiento">{{ c.codigo }}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <div class="legend">
+      <span><i style="background:#dff5e6;border:1px solid #b6e3c5"></i>Libre</span>
+      <span><i style="background:#fde3e3;border:1px solid #f4b9b9"></i>Ocupada</span>
+      <span><i style="background:#e9ecf1;border:1px solid #cfd5df"></i>Mantenimiento</span>
+      {% if consulta and consulta.puede_entrar %}<span><i style="background:#2f6fdb"></i>Seleccionada</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

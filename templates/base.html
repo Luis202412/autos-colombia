@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}{% endblock %} · Autos Colombia</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">Autos <span>Colombia</span><small>Sistema del parqueadero</small></div>
+    <nav class="nav">
+      {% set ep = request.endpoint %}
+      <a href="{{ url_for('movimiento.panel') }}" class="{{ 'act' if ep == 'movimiento.panel' }}">Panel principal</a>
+      <a href="{{ url_for('movimiento.entrada') }}" class="{{ 'act' if ep == 'movimiento.entrada' }}">Registrar entrada</a>
+      <a href="{{ url_for('movimiento.salida') }}" class="{{ 'act' if ep == 'movimiento.salida' }}">Registrar salida</a>
+      <a href="{{ url_for('movimiento.vehiculos_dentro') }}" class="{{ 'act' if ep == 'movimiento.vehiculos_dentro' }}">Vehículos en el parqueadero</a>
+      {% if g.operario.es_administrador() %}
+      <a href="{{ url_for('movimiento.historial') }}" class="{{ 'act' if ep == 'movimiento.historial' }}">Historial de movimientos</a>
+      {% endif %}
+    </nav>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <h1>{% block encabezado %}{% endblock %}</h1>
+      <div class="user">
+        <div class="av">{{ g.operario.iniciales }}</div>
+        <div><b>{{ g.operario.nombre }}</b><br><small>{{ g.operario.rol.value }}</small></div>
+        <form method="post" action="{{ url_for('autenticacion.logout') }}">
+          <input type="hidden" name="csrf" value="{{ csrf_token }}">
+          <button class="btn g s" type="submit">Salir</button>
+        </form>
+      </div>
+    </header>
+    <main class="content">
+      {% for categoria, mensaje in get_flashed_messages(with_categories=true) %}
+      <div class="alert {{ categoria }}" {% if categoria == 'o' %}data-auto{% endif %}>{{ mensaje }}</div>
+      {% endfor %}
+      {% block contenido %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

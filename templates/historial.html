@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de movimientos{% endblock %}
+{% block encabezado %}Historial de movimientos{% endblock %}
+{% block contenido %}
+<div class="panel">
+  <form class="row" method="get" action="{{ url_for('movimiento.historial') }}" style="align-items:flex-end">
+    <div class="fld" style="margin:0"><label for="placa">Placa</label>
+      <input class="inp mayus" id="placa" name="placa" value="{{ placa }}" maxlength="6" placeholder="Todas"></div>
+    <div class="fld" style="margin:0"><label for="desde">Desde</label>
+      <input class="inp" type="date" id="desde" name="desde" value="{{ desde.isoformat() if desde else '' }}"></div>
+    <div class="fld" style="margin:0"><label for="hasta">Hasta</label>
+      <input class="inp" type="date" id="hasta" name="hasta" value="{{ hasta.isoformat() if hasta else '' }}"></div>
+    <button class="btn p" type="submit">Consultar</button>
+    <a class="btn g" href="{{ url_for('movimiento.historial') }}">Limpiar</a>
+  </form>
+</div>
+<div class="panel">
+  <div class="tabla-scroll">
+  <table>
+    <tr><th>Placa</th><th>Entrada</th><th>Salida</th><th>Celda</th><th>Operario</th></tr>
+    {% for m in movimientos %}
+    <tr>
+      <td><b>{{ m.vehiculo.placa }}</b></td>
+      <td>{{ m.fecha_hora_entrada | fecha_hora }}</td>
+      <td>{% if m.esta_abierto() %}<span class="badge warn">En el parqueadero</span>{% else %}{{ m.fecha_hora_salida | fecha_hora }}{% endif %}</td>
+      <td>{{ m.celda.codigo }}</td>
+      <td>{{ m.operario_entrada.usuario_sistema }}{% if m.operario_salida and m.operario_salida.id_operario != m.operario_entrada.id_operario %} <small style="color:#6b7a8d">· salida: {{ m.operario_salida.usuario_sistema }}</small>{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="vacio">No hay movimientos con esos filtros.</td></tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% if movimientos | length >= 300 %}<p class="nota">Se muestran los 300 movimientos más recientes. Ajusta los filtros para ver otros.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Vehículos en el parqueadero{% endblock %}
+{% block encabezado %}Vehículos en el parqueadero{% endblock %}
+{% block contenido %}
+<div class="panel">
+  <div class="panel-cab">
+    <h2>{{ filas | length }} vehículo{{ '' if filas | length == 1 else 's' }} dentro</h2>
+    <form class="acciones" method="get" action="{{ url_for('movimiento.vehiculos_dentro') }}">
+      <input class="inp mayus" name="placa" value="{{ placa }}" maxlength="6" placeholder="Buscar por placa" style="width:230px;height:36px">
+      <select class="inp" id="filtro-tipo" name="tipo" style="width:160px;height:36px">
+        <option value="">Todos los tipos</option>
+        {% for t in TipoVehiculo %}<option value="{{ t.name }}" {{ 'selected' if tipo == t.name }}>{{ t.value }}</option>{% endfor %}
+      </select>
+      <button class="btn p s" type="submit">Buscar</button>
+    </form>
+  </div>
+  <div class="tabla-scroll">
+  <table>
+    <tr><th>Placa</th><th>Tipo</th><th>Propietario</th><th>Celda</th><th>Entrada</th><th>Tiempo dentro</th><th></th></tr>
+    {% for m, tiempo in filas %}
+    <tr>
+      <td><b>{{ m.vehiculo.placa }}</b></td>
+      <td>{{ m.vehiculo.tipo.value }}</td>
+      <td>{{ m.vehiculo.usuario.nombre_completo }}</td>
+      <td>{{ m.celda.codigo }}</td>
+      <td>{{ (m.fecha_hora_entrada | hora) if m.fecha_hora_entrada.date() == hoy else (m.fecha_hora_entrada | fecha_hora) }}</td>
+      <td>{{ tiempo }}</td>
+      <td><a class="btn g s" href="{{ url_for('movimiento.salida', placa=m.vehiculo.placa) }}">Registrar salida</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="vacio">No hay vehículos dentro con esos filtros.</td></tr>
+    {% endfor %}
+  </table>
+  </div>
+</div>
+{% endblock %}

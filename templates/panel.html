@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Panel principal{% endblock %}
+{% block encabezado %}Panel principal{% endblock %}
+{% block contenido %}
+<div class="cards">
+  <div class="card"><div class="l">Celdas libres carros</div><div class="v">{{ resumen.libres_carros }}</div><div class="s">de {{ resumen.total_carros }} celdas</div></div>
+  <div class="card"><div class="l">Celdas libres motos</div><div class="v">{{ resumen.libres_motos }}</div><div class="s">de {{ resumen.total_motos }} celdas</div></div>
+  <div class="card"><div class="l">Vehículos dentro</div><div class="v">{{ resumen.dentro }}</div><div class="s">en este momento</div></div>
+  <div class="card"><div class="l">Movimientos de hoy</div><div class="v">{{ resumen.movimientos_hoy }}</div><div class="s">entradas y salidas</div></div>
+</div>
+<div class="panel">
+  <div class="panel-cab">
+    <h2>Últimos movimientos</h2>
+    <div class="acciones">
+      <a class="btn a s" href="{{ url_for('movimiento.entrada') }}">Registrar entrada</a>
+      <a class="btn g s" href="{{ url_for('movimiento.salida') }}">Registrar salida</a>
+    </div>
+  </div>
+  <div class="tabla-scroll">
+  <table>
+    <tr><th>Hora</th><th>Placa</th><th>Tipo</th><th>Celda</th><th>Movimiento</th></tr>
+    {% for fecha, clase, m in resumen.ultimos %}
+    <tr>
+      <td>{{ fecha | hora }}</td>
+      <td><b>{{ m.vehiculo.placa }}</b></td>
+      <td>{{ m.vehiculo.tipo.value }}</td>
+      <td>{{ m.celda.codigo }}</td>
+      <td><span class="badge {{ 'ok' if clase == 'Entrada' else 'info' }}">{{ clase }}</span></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="vacio">Todavía no hay movimientos registrados.</td></tr>
+    {% endfor %}
+  </table>
+  </div>
+</div>
+{% endblock %}
